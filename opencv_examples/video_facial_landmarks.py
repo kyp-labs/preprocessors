@@ -29,12 +29,13 @@ if __name__ == '__main__':
 
     # create a VideoCapture object and read from input file
     cap = cv2.VideoCapture(args.video)
+    success = True
 
     # loop over the frames from the video stream
-    while True:
+    while success:
         # grab the frame from the threaded video
         # and convert it to grayscale
-        ret, frame = cap.read()
+        success, frame = cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # detect faces in the grayscale frame
