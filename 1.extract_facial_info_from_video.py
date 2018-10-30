@@ -25,6 +25,8 @@ ap.add_argument('-i', '--interval', type=int, default=20,
                 help='frame interval not to store too much images')
 ap.add_argument('-b', '--blurry-threshold', type=float, default=100.0,
                 help='measures below this value will be considered blurry')
+ap.add_argument('-m', '--max-output-num', type=int, default=-1,
+                help='maximum number of output images')
 args = ap.parse_args()
 
 
@@ -89,6 +91,7 @@ if __name__ == '__main__':
     cap = cv2.VideoCapture(args.video)
     success = True
     count = -1
+    out_count = 1
 
     # loop over the frames from the input video
     while success:
@@ -125,6 +128,11 @@ if __name__ == '__main__':
             save_path = args.output+"/frame_%d_%d.jpg" % (count, i)
             lst.append([save_path] + landmarks)
             cv2.imwrite(save_path, frame)
+            out_count += 1
+
+        if args.max_output_num >= 0 and\
+                args.max_output_num == out_count:
+                    break
 
     # save landmarks as a csv file
     landmarks_info = pd.DataFrame(lst, columns=cols)
