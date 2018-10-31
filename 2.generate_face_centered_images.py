@@ -149,7 +149,6 @@ def generate_face_centered_images(img, loose_landmarks):
 
     # Save new landmarks
     new_landmarks = landmarks.reshape(-1).tolist()[0]
-    print(new_landmarks)
 
     return (img, new_landmarks)
 
@@ -159,13 +158,14 @@ if __name__ == '__main__':
     if not os.path.exists(args.output):
         os.mkdir(args.output)
 
+    print('[INFO] reading the csv file...')
     landmarks_info = pd.read_csv(args.image_path+'/landmarks.csv')
 
     # columns and empty list to make a Pandas' dataframe
     cols, lst = utils.get_landmarks_dataframe_args()
 
     for i, img_name in enumerate(landmarks_info['NAME_ID']):
-        print('preceeding %s...' % (img_name))
+        print('[INFO] preceeding %s...' % (img_name))
 
         img = PIL.Image.open(img_name)
         loose_landmarks =\

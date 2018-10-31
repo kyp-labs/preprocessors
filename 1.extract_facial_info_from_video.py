@@ -57,7 +57,7 @@ if __name__ == '__main__':
         if count % args.interval != 0:
             continue
 
-        print('preceeding frame_%d...' % (count))
+        print('[INFO] preceeding frame_%d...' % (count))
 
         # grab the frame from the threaded video
         # and convert it to grayscale
