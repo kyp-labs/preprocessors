@@ -10,6 +10,7 @@ import argparse
 import numpy as np
 import pandas as pd
 from scipy import ndimage
+import utils
 
 
 # construct the argument parse and parse the arguments
@@ -52,12 +53,15 @@ def rotate_landmarks(landmarks, quad):
 
 def generate_face_centered_images(img, loose_landmarks):
     """Generate face-centered image with newly caculated landmarks."""
-    left_eye = loose_landmarks[0:2]
-    right_eye = loose_landmarks[2:4]
-    nose = loose_landmarks[4:6]
-    left_mouth = loose_landmarks[6:8]
-    right_mouth = loose_landmarks[8:10]
-    landmarks = np.stack([left_eye, right_eye, nose, left_mouth, right_mouth])
+    landmarks = np.stack([loose_landmarks[2*i:2*i+2]
+                         for i in range(68)]).astype('float32')
+
+    landmarks_for_centered_face =\
+        utils.get_landmarks_for_centered_face(landmarks)
+    left_eye = landmarks_for_centered_face[0]
+    right_eye = landmarks_for_centered_face[1]
+    left_mouth = landmarks_for_centered_face[3]
+    right_mouth = landmarks_for_centered_face[4]
 
     # Choose oriented crop rectangle.
     eye_avg = (left_eye + right_eye) * 0.5 + 0.5
@@ -144,11 +148,8 @@ def generate_face_centered_images(img, loose_landmarks):
     landmarks = resize_landmarks(landmarks, quad)
 
     # Save new landmarks
-    new_landmarks = [landmarks[0, 0], landmarks[0, 1],
-                     landmarks[1, 0], landmarks[1, 1],
-                     landmarks[2, 0], landmarks[2, 1],
-                     landmarks[3, 0], landmarks[3, 1],
-                     landmarks[4, 0], landmarks[4, 1]]
+    new_landmarks = landmarks.reshape(-1).tolist()[0]
+    print(new_landmarks)
 
     return (img, new_landmarks)
 
@@ -161,18 +162,14 @@ if __name__ == '__main__':
     landmarks_info = pd.read_csv(args.image_path+'/landmarks.csv')
 
     # columns and empty list to make a Pandas' dataframe
-    cols, lst = ['NAME_ID', 'P1X', 'P1Y',
-                            'P2X', 'P2Y',
-                            'P3X', 'P3Y',
-                            'P4X', 'P4Y',
-                            'P5X', 'P5Y'], []
+    cols, lst = utils.get_landmarks_dataframe_args()
 
     for i, img_name in enumerate(landmarks_info['NAME_ID']):
         print('preceeding %s...' % (img_name))
 
         img = PIL.Image.open(img_name)
         loose_landmarks =\
-            landmarks_info[i:i+1].values[0][2:12].astype('float32')
+            landmarks_info[i:i+1].values[0][2:138].astype('float32')
 
         centered_img, new_landmarks =\
             generate_face_centered_images(img, loose_landmarks)

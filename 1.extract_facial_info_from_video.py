@@ -11,6 +11,7 @@ import argparse
 import dlib
 import cv2
 import os
+import utils
 
 
 # construct the argument parse and parse the arguments
@@ -30,46 +31,6 @@ ap.add_argument('-m', '--max-output-num', type=int, default=-1,
 args = ap.parse_args()
 
 
-def variance_of_laplacian(image):
-    """Return how blurry the input image is.
-
-    Compute the Laplacian of the image and then return the focus
-    measure, which is simply the variance of the Laplacian
-    """
-    return cv2.Laplacian(image, cv2.CV_64F).var()
-
-
-def is_blurry_face(image, rect):
-    """Return whether the input image is blurry or not."""
-    (x, y, w, h) = face_utils.rect_to_bb(rect)
-
-    if x < 0:
-        w += x
-        x = 0
-    if y < 0:
-        h += y
-        y = 0
-
-    fm = variance_of_laplacian(gray[y:y+h, x:x+w])
-    if fm < args.blurry_threshold:
-        return True
-
-    return False
-
-
-def get_landmarks(shape):
-    """Return landmarks for eyes, nose, and mouth."""
-    p1x = (shape[36][0] + shape[39][0]) / 2
-    p1y = (shape[36][1] + shape[39][1]) / 2
-    p2x = (shape[42][0] + shape[45][0]) / 2
-    p2y = (shape[42][1] + shape[45][1]) / 2
-    (p3x, p3y) = shape[30]
-    (p4x, p4y) = shape[48]
-    (p5x, p5y) = shape[54]
-
-    return [p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, p5x, p5y]
-
-
 if __name__ == '__main__':
     if not os.path.exists(args.output):
         os.mkdir(args.output)
@@ -81,11 +42,7 @@ if __name__ == '__main__':
     predictor = dlib.shape_predictor(args.shape_predictor)
 
     # columns and empty list to make a Pandas' dataframe
-    cols, lst = ['NAME_ID', 'P1X', 'P1Y',
-                            'P2X', 'P2Y',
-                            'P3X', 'P3Y',
-                            'P4X', 'P4Y',
-                            'P5X', 'P5Y'], []
+    cols, lst = utils.get_landmarks_dataframe_args()
 
     # create a VideoCapture object and read from input file
     cap = cv2.VideoCapture(args.video)
@@ -113,7 +70,7 @@ if __name__ == '__main__':
         # loop over the face detections
         for i, rect in enumerate(rects):
             # focus measure of the image using the Variance of Laplacian method
-            if is_blurry_face(gray, rect):
+            if utils.is_blurry_face(gray, rect, args.blurry_threshold):
                 continue
 
             # determine the facial landmarks for the face region, then
@@ -122,7 +79,7 @@ if __name__ == '__main__':
             shape = face_utils.shape_to_np(shape)
 
             # fetch (x, y)-coordinates for the facial landmarks
-            landmarks = get_landmarks(shape)
+            landmarks = [p for coordinates in shape for p in coordinates]
 
             # save the frame
             save_path = args.output+"/frame_%d_%d.jpg" % (count, i)
