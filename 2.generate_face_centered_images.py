@@ -158,7 +158,7 @@ if __name__ == '__main__':
     if not os.path.exists(args.output):
         os.mkdir(args.output)
 
-    print('[INFO] reading the csv file...')
+    print('[INFO] reading a csv file...')
     landmarks_info = pd.read_csv(args.image_path+'/landmarks.csv')
 
     # columns and empty list to make a Pandas' dataframe
@@ -179,5 +179,6 @@ if __name__ == '__main__':
         lst.append([output_img_name] + new_landmarks)
 
     # save landmarks as a csv file
+    print('[INFO] saving a csv file...')
     new_landmarks_info = pd.DataFrame(lst, columns=cols)
     new_landmarks_info.to_csv(args.output+'/landmarks.csv')

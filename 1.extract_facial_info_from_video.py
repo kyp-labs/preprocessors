@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     # initialize dlib's face detector (HOG-based) and then create
     # the facial landmark predictor
-    print('[INFO] loading facial landmark predictor...')
+    print('[INFO] loading a facial landmark predictor...')
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor(args.shape_predictor)
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     out_count = 1
 
     # loop over the frames from the input video
-    while success:
+    while True:
         # process every args.interval image
         count += 1
         if count % args.interval != 0:
@@ -61,16 +61,20 @@ if __name__ == '__main__':
 
         # grab the frame from the threaded video
         # and convert it to grayscale
-        success, frame = cap.read()
+        ret, frame = cap.read()
+        if ret is False:
+            break
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # detect faces in the grayscale frame
         rects = detector(gray, 0)
+        print('[INFO] Detected', len(rects), 'faces.')
 
         # loop over the face detections
         for i, rect in enumerate(rects):
             # focus measure of the image using the Variance of Laplacian method
             if utils.is_blurry_face(gray, rect, args.blurry_threshold):
+                print('[INFO] Pass a blurry face image.')
                 continue
 
             # determine the facial landmarks for the face region, then
@@ -92,6 +96,7 @@ if __name__ == '__main__':
                     break
 
     # save landmarks as a csv file
+    print('[INFO] saving a csv file...')
     landmarks_info = pd.DataFrame(lst, columns=cols)
     landmarks_info.to_csv(args.output+'/landmarks.csv')
 
